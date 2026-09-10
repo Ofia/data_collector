@@ -315,7 +315,7 @@ z"/>
   <input class="selfie-input" type="file" id="selfie" accept="image/*" capture="user" required>
   <p class="selfie-filename" id="selfieFilename"></p>
 
-  <button type="submit" id="submitBtn">Enviar registro</button>
+  <button type="submit" id="submitBtn" disabled>Enviar registro</button>
   <p id="status"></p>
 </form>
 
@@ -394,6 +394,7 @@ function checkedValues(name) {
 const form = document.getElementById('workerForm')
 const statusEl = document.getElementById('status')
 const submitBtn = document.getElementById('submitBtn')
+submitBtn.disabled = false
 
 form.addEventListener('submit', async (e) => {
   e.preventDefault()
@@ -430,6 +431,7 @@ form.addEventListener('submit', async (e) => {
     specialtiesWrap.style.display = 'none'
     toolsWrap.style.display = 'none'
     document.getElementById('selfieFilename').textContent = ''
+    submitBtn.disabled = false
   } catch (err) {
     console.error(err)
     statusEl.textContent = 'Error al enviar. Intenta de nuevo.'
