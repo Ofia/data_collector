@@ -31,7 +31,21 @@
     text-align: center;
     gap: 14mm;
   }
+  .logo-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3mm;
+    margin-top: -12mm;
+  }
   .logo { width: 42mm; }
+  .brand {
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: var(--color-secondary);
+  }
   .headline {
     font-family: var(--display);
     font-size: 30px;
@@ -59,6 +73,7 @@
 <body>
 
 <div class="flyer">
+  <div class="logo-wrap">
   <svg class="logo" viewBox="90 100 881 363" xmlns="http://www.w3.org/2000/svg">
   <path fill="#1a1a1a" d="
   M402.038391,421.965393
@@ -162,6 +177,8 @@
   	C689.147644,220.690903 653.508240,175.515182 592.874756,148.685745
   z"/>
   </svg>
+  <div class="brand">the-bull.ai</div>
+  </div>
 
   <div class="headline">
     Conectando trabajadores con empleadores en Santa Teresa — encuentra trabajo o gana dinero extra. Escanea el código QR y agrega tus datos gratis.
