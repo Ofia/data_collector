@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Registro de Trabajadores - Santa Teresa</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: system-ui, -apple-system, sans-serif;
+    background: #f5f5f0;
+    margin: 0;
+    padding: 20px;
+    color: #222;
+  }
+  form {
+    max-width: 480px;
+    margin: 0 auto;
+    background: white;
+    padding: 24px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+  h1 { font-size: 1.4rem; margin-top: 0; }
+  label { display: block; margin-top: 16px; font-weight: 600; font-size: 0.95rem; }
+  input, select, textarea {
+    width: 100%;
+    padding: 10px;
+    margin-top: 6px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 1rem;
+  }
+  .checkbox-group { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+  .checkbox-group label {
+    font-weight: normal;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #f0f0eb;
+    padding: 8px 12px;
+    border-radius: 8px;
+    margin-top: 0;
+    font-size: 0.9rem;
+  }
+  .checkbox-group input { width: auto; margin: 0; }
+  button {
+    width: 100%;
+    margin-top: 24px;
+    padding: 14px;
+    background: #2a7f3f;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: 600;
+  }
+  button:disabled { background: #999; }
+  #status { text-align: center; margin-top: 16px; font-weight: 600; }
+  .hint { font-size: 0.8rem; color: #777; margin-top: 4px; }
+</style>
+</head>
+<body>
+
+<form id="workerForm">
+  <h1>Registro de Trabajadores 🛠️</h1>
+  <p>Llena tus datos para que empleadores en Santa Teresa te puedan contactar.</p>
+
+  <label>Nombre completo</label>
+  <input type="text" id="name" required>
+
+  <label>Número de WhatsApp</label>
+  <input type="tel" id="whatsapp" placeholder="+505 8888 8888" required>
+
+  <label>Tipo de trabajo</label>
+  <select id="jobType" required>
+    <option value="">Selecciona...</option>
+    <option value="builder">Construcción</option>
+    <option value="gardener">Jardinería</option>
+    <option value="security">Seguridad</option>
+    <option value="cleaner">Limpieza</option>
+    <option value="cook">Cocina</option>
+    <option value="nanny">Niñera</option>
+  </select>
+
+  <div id="specialtiesWrap" style="display:none">
+    <label>Especialidades</label>
+    <div class="checkbox-group" id="specialtiesGroup"></div>
+  </div>
+
+  <div id="toolsWrap" style="display:none">
+    <label>Herramientas que tienes o puedes conseguir</label>
+    <div class="checkbox-group" id="toolsGroup"></div>
+  </div>
+
+  <label>Disponibilidad</label>
+  <select id="availability" required>
+    <option value="">Selecciona...</option>
+    <option value="full_time">Tiempo completo</option>
+    <option value="part_time">Medio tiempo</option>
+    <option value="weekends">Solo fines de semana</option>
+    <option value="on_call">Por llamada / según se necesite</option>
+  </select>
+
+  <label>Tarifa por hora (córdobas)</label>
+  <input type="number" id="hourlyRate" min="0" step="1" required>
+
+  <label>Selfie (foto de tu cara)</label>
+  <input type="file" id="selfie" accept="image/*" capture="user" required>
+  <p class="hint">Toca para abrir la cámara y tomarte una foto.</p>
+
+  <button type="submit" id="submitBtn">Enviar registro</button>
+  <p id="status"></p>
+</form>
+
+<script type="module">
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+
+// TODO: fill in after Supabase project is created
+const SUPABASE_URL = 'https://oajtkvzgsjdwtfmqsccs.supabase.co'
+const SUPABASE_ANON_KEY = 'sb_publishable_sKNQ05XQ3KWnAYGsif4BfQ_VdmJ8mW0'
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+
+// job type -> checkbox options. One config object, no per-type branching code.
+const JOB_OPTIONS = {
+  builder: {
+    specialties: ['Azulejos/Cerámica', 'Soldadura', 'Pintura', 'Plomería', 'Electricidad', 'Carpintería', 'Albañilería'],
+    tools: ['Máquina de soldar', 'Sierra para azulejo', 'Taladro', 'Herramientas eléctricas', 'Escalera']
+  },
+  gardener: {
+    specialties: ['Diseño de jardines', 'Poda de árboles', 'Riego'],
+    tools: ['Moto guadaña (moto araña)', 'Machete', 'Cortadora de grama', 'Sopladora', 'Tijeras de podar']
+  },
+  security: {
+    specialties: ['Turno nocturno', 'Turno diurno', 'Con experiencia armada'],
+    tools: ['Radio', 'Linterna']
+  },
+  cleaner: {
+    specialties: ['Limpieza de casas', 'Limpieza de negocios', 'Limpieza profunda'],
+    tools: ['Aspiradora propia', 'Productos de limpieza propios']
+  },
+  cook: {
+    specialties: ['Comida nicaragüense', 'Comida internacional', 'Repostería', 'Parrilla/BBQ'],
+    tools: []
+  },
+  nanny: {
+    specialties: ['Cuido de bebés', 'Cuido de niños mayores', 'Ayuda con tareas', 'Certificación CPR'],
+    tools: []
+  }
+}
+
+const jobTypeEl = document.getElementById('jobType')
+const specialtiesWrap = document.getElementById('specialtiesWrap')
+const specialtiesGroup = document.getElementById('specialtiesGroup')
+const toolsWrap = document.getElementById('toolsWrap')
+const toolsGroup = document.getElementById('toolsGroup')
+
+function renderCheckboxes(container, options, namePrefix) {
+  container.innerHTML = options.map((opt, i) => `
+    <label>
+      <input type="checkbox" name="${namePrefix}" value="${opt}">
+      ${opt}
+    </label>
+  `).join('')
+}
+
+jobTypeEl.addEventListener('change', () => {
+  const opts = JOB_OPTIONS[jobTypeEl.value]
+  if (!opts) {
+    specialtiesWrap.style.display = 'none'
+    toolsWrap.style.display = 'none'
+    return
+  }
+  renderCheckboxes(specialtiesGroup, opts.specialties, 'specialty')
+  renderCheckboxes(toolsGroup, opts.tools, 'tool')
+  specialtiesWrap.style.display = opts.specialties.length ? 'block' : 'none'
+  toolsWrap.style.display = opts.tools.length ? 'block' : 'none'
+})
+
+function checkedValues(name) {
+  return [...document.querySelectorAll(`input[name="${name}"]:checked`)].map(el => el.value)
+}
+
+const form = document.getElementById('workerForm')
+const statusEl = document.getElementById('status')
+const submitBtn = document.getElementById('submitBtn')
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault()
+  submitBtn.disabled = true
+  statusEl.textContent = 'Enviando...'
+
+  try {
+    const selfieFile = document.getElementById('selfie').files[0]
+    const filePath = `${Date.now()}_${selfieFile.name}`
+
+    const { error: uploadError } = await supabase.storage
+      .from('selfies')
+      .upload(filePath, selfieFile)
+    if (uploadError) throw uploadError
+
+    const { data: publicUrlData } = supabase.storage
+      .from('selfies')
+      .getPublicUrl(filePath)
+
+    const { error: insertError } = await supabase.from('workers').insert({
+      name: document.getElementById('name').value,
+      whatsapp: document.getElementById('whatsapp').value,
+      job_type: jobTypeEl.value,
+      specialties: checkedValues('specialty'),
+      tools: checkedValues('tool'),
+      availability: document.getElementById('availability').value,
+      hourly_rate: Number(document.getElementById('hourlyRate').value),
+      selfie_url: publicUrlData.publicUrl
+    })
+    if (insertError) throw insertError
+
+    statusEl.textContent = '¡Registro enviado! Gracias.'
+    form.reset()
+    specialtiesWrap.style.display = 'none'
+    toolsWrap.style.display = 'none'
+  } catch (err) {
+    console.error(err)
+    statusEl.textContent = 'Error al enviar. Intenta de nuevo.'
+    submitBtn.disabled = false
+  }
+})
+</script>
+
+</body>
+</html>
